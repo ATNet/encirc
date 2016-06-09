@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<title>"IRC chat"</title>
+	<link rel="stylesheet" type="text/css" href="../css/style.css"/>
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script type="text/javascript"
+			src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+	<script type="text/javascript" src="../js/password_effect.js"></script>
+	<script type="text/javascript" src="../js/sha256.js"></script>
+	<script type="text/javascript">
+		//<![CDATA[
+		$(window).load(function () {
+			$('.modal').fadeOut(1000);
+
+			var query = getQueryParams(document.location.search);
+			if ((typeof query.msg != "undefined") && query.msg != '') {
+
+				var oldURL = window.location.href;
+				if(query.msg=='kickedout') {
+					alert("Sorry! You got kicked out because of malicious use of scripting!->" + query.msg);
+				}
+				else{
+					alert("Sorry! You cannot enter the chat room because " + query.msg);
+				}
+				var index = 0;
+				var newURL = oldURL;
+				index = oldURL.indexOf('?');
+				if (index == -1) {
+					index = oldURL.indexOf('#');
+				}
+				if (index != -1) {
+					newURL = oldURL.substring(0, index);
+				}
+
+				window.history.pushState("object or string", "Title", newURL);
+			}
+		});
+
+		function getQueryParams(qs) {
+			qs = qs.split('+').join(' ');
+
+			var params = {},
+					tokens,
+					re = /[?&]?([^=]+)=([^&]*)/g;
+
+			while (tokens = re.exec(qs)) {
+				params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+			}
+
+			return params;
+		}
+
+
+		function validateForm() {
+			var channelname = $("#yourchannelname").val().toLowerCase();
+			var passphrase = $("#password_text").val();
+			if ($("#servercombo").val() == 0) {
+				alert("You need to enter some value in select box!!");
+				return false;
+			} else if (($("#password_text").is(":visible"))) {
+				if (passphrase.length == 0) {
+					alert("You need to enter a password!!");
+					return false;
+				} else {
+					var hashpass = sha256(passphrase);
+					$("#pass_hash").val(hashpass);
+					if(typeof(Storage) != "undefined") {
+
+						sessionStorage[channelname] = passphrase;
+					} else {
+						alert("Sorry! No Web Storage support..");
+						return false;
+					}
+					return true;
+
+				}
+			}
+
+			else {
+
+				$('.modal').fadeOut(1000);
+				return true;
+
+			}
+		}
+		//]]>
+	</script>
+
+</head>
+<body>
+
+<div class="modal"><h1 style="color: white;text-align: center;">Loading...</h1></div>
+<h1>Web based IRC chat welcome page</h1>
+
+<form action='chatRoom.xhtml' method="post"
+	  onsubmit="return validateForm();">
+	<div class="div_outer">
+		<p>
+			<i>Welcome to syncronous chat based on IRC - course work for
+				Network Applications Heriot Watt University</i>
+		</p>
+		<div class="div_home">
+
+			<table class="div_outer_class">
+
+				<tr>
+					<td>Server:</td>
+
+					<td><select style="width: 240px" name="servercombo"
+								id="servercombo">
+						<option value="0">--Select a chanel--</option>
+						<option value="irc.freenode.net">irc.freenode.net</option>
+						<option value="sinisalo.freenode.net" selected="selected">
+							sinisalo.freenode.net
+						</option>
+					</select></td>
+				</tr>
+				<tr>
+					<td>Nick Name:
+					</td>
+					<td><input maxlength="30" name="yourchatname"
+							   style="width: 210px" title="atleast 3 characters, maximum 9 characters" type="text"
+							   required="required" pattern="[A-Za-z(?=.*\d)\-\ ]{3,9}"/></td>
+				</tr>
+				<tr>
+					<td>Enter Channel Name: <img id="key" src="images/key-icon.png"
+												 alt="key" title="Encrypt channel with a password"/></td>
+					<td><input maxlength="30" name="yourchannelname" id="yourchannelname"
+							   style="width: 145px" type="text" required="required" pattern="[A-Za-z0-9\S]{1,50}" title="upto 50 characters without spaces"/></td>
+				</tr>
+				<tr id="password">
+					<td>Password:</td>
+					<td><input maxlength="30" name="password_text"
+							   id="password_text" style="width: 218px" type="password"
+							   title="atleast 1 Uppercase, 1 Lowercase, 1 number"
+							   pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).*$"/>
+					    <input type="hidden" name="pass_hash" id="pass_hash"/>
+					</td>
+				</tr>
+
+				<tr>
+
+					<td colspan="2"><input class="morph" type="submit"
+										   value="Connect" onclick="return validateForm();"></input></td>
+				</tr>
+			</table>
+
+		</div>
+
+	</div>
+	<a href="#openModal">
+		<div>
+			<img id="lightbulb" src="./images/lightbulb_icon.png" alt="lightbulb"/>
+		</div>
+	</a>
+	<div id="openModal" class="modalDialog">
+		<div>
+			<a href="#close" title="Close" class="close">X</a>
+			<h2><u>Setting up</u></h2>
+			<h3 id="step_one">Step One</h3>
+			<p id="step_one_p">Select a server from the drop down menu here --> <img id="server_select" src="./images/server_select_image.png" alt="irc_server"/>
+			</p>
+
+			<h3 id="step_two">Step Two</h3>
+			<p id="step_two_p">Enter a nick name for yourself here --> <img id="nick_select" src="./images/nick_select.png" alt="nickname"/></p>
+
+			<h3 id="step_three">Step Three</h3>
+			<p id="step_three_p">Enter a channel name here (if channel does not exist , it will be automatically
+				created) --><img id="channel_select" src="./images/channel_select.png" alt="channel_select"/></p>
+
+			<h3 id="step_four">Step Four (Optional)</h3>
+			<p id="step_four_p">Click on the key icon and type a password on the text field that appears --><img
+					id="password_select" src="./images/password_select.png" alt="password_select"/></p>
+
+
+		</div>
+	</div>
+</form>
+<div id="W3CHTML">
+	<button type="button"
+			onclick="window.location.href = 'http://validator.w3.org/check?uri=' + window.location.href">
+		<img src="http://www.w3.org/Icons/valid-xhtml11.png"
+			 alt="Valid XHTML 1.0!"/>
+	</button>
+</div>
+<div id="W3CCSS">
+	<button type="button"
+			onclick="window.location.href = 'https://jigsaw.w3.org/css-validator/validator?uri=' + window.location.href">
+		<img src="http://jigsaw.w3.org/css-validator/images/vcss-blue"
+			 alt="Valid CSS!"/>
+	</button>
+</div>
+
+<div style="margin-right: 30px; overflow: hidden">
+	<div id="marquee">
+		<span style="color: yellow;">Written by group of MSc students:</span><br />
+		<a href="mailto:ak48@hw.ac.uk"> Artem Karpov ak48@hw.ac.uk</a> <br /><a
+			href="mailto:nl148@hw.ac.uk"> Nelio Lukas nl148@hw.ac.uk</a><br /> <a
+			href="mailto:tf7@hw.ac.uk"> Tom Francis tf7@hw.ac.uk</a>
+	</div>
+</div>
+
+</body>
+</html>

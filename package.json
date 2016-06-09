@@ -1,0 +1,16 @@
+{
+  "name": "NA",
+  "description": "Course work network appications",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "ws": "latest",
+    "body-parser": "latest",
+    "irc-colors": "latest"
+  },
+  "main": "lib/irc"
+}

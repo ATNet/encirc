@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat</title>
+    <link rel="stylesheet" type="text/css"
+          href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"/>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="../js/browser.js"></script>
+    <script type="text/javascript"
+            src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+     <script src="http://cryptojs.altervista.org/api/functions_cryptography.js"></script>
+   <!--<script type="text/javascript" src="../js/aes.js"></script>-->
+    <script type="text/javascript">
+        //<![CDATA[
+
+        $body = $("body");
+
+        $(document).on({
+            ajaxStart: function () {
+                $body.addClass("loading");
+            },
+            ajaxStop: function () {
+                $body.removeClass("loading");
+            }
+        });
+
+        $(document)
+                .ready(
+                        function () {
+
+                            var lab = 0, channel = "";
+                            var host = location.origin;
+                            $
+                                    .ajax({
+
+                                        url: host+'/ak48tf7nl148logininfonetworkapplications',
+                                        dataType: "json",
+                                        cache: false,
+                                        timeout: 5000,
+                                        success: function (data) {
+
+                                            $("#chatname").val(data.chatname);
+
+                                            var channel = data.channel.trim();
+                                            var channelArray = [];
+                                            var option = '';
+                                            clientChannels.push(data.channel.trim());
+
+                                            $("#channelSelect > option")
+                                                    .each(
+                                                            function () {
+
+                                                                if ($(this).text()
+                                                                                .trim() == channel
+                                                                                .trim()) {
+
+                                                                    lab = 1;
+                                                                }
+
+                                                            });
+
+                                            //check id channel exists in array
+                                            if (lab == 0) {
+                                                //append channel name to drop down menu
+
+                                                option = '<option value="'
+                                                        + channel.trim() + '">'
+                                                        + channel + '</option>';
+                                                $('#channelSelect').append(option);
+
+                                            }
+
+                                            $("#channelSelect").val(channel.trim());
+
+                                            var tabs = $("#tabs").tabs();
+                                            var channelName = $(
+                                                    "#channelSelect option:selected")
+                                                    .text();
+
+                                            var namecheck = channelName.trim()
+                                                    .substring(1);
+
+                                            addNewChat(channelName.trim());
+
+                                            $('#ultab li a:not(:first)').addClass(
+                                                    'inactive');
+                                            $('.divMessageBox:not(:first)').hide();
+                                            $("#tabs").tabs("refresh");
+
+                                            tabs
+                                                    .delegate(
+                                                            "span.ui-icon-close",
+                                                            "click",
+                                                            function () {
+                                                                $("#tabs").tabs(
+                                                                        'option',
+                                                                        'active',
+                                                                          -1);
+                                                                var tabCount = $(
+                                                                        "#tabs >ul >li")
+                                                                        .size();
+                                                                if (tabCount == 1) {
+                                                                    closeWindow();
+
+                                                                } else {
+                                                                    var panelId = $(
+                                                                            this)
+                                                                            .closest(
+                                                                                    "li")
+                                                                            .remove()
+                                                                            .attr(
+                                                                                    "aria-controls");
+                                                                    $("#" + panelId)
+                                                                            .remove();
+                                                                    tabs
+                                                                            .tabs("refresh");
+                                                                }
+                                                            });
+
+                                        },
+                                        error: function (jqXHR, textStatus,
+                                                         errorThrown) {
+                                            alert('error ' + textStatus + " "
+                                                    + errorThrown);
+                                        }
+                                    });
+
+                            //if the enter key is pressed inside usermsg textbox
+                            $('#usermsg')
+                                    .keypress(
+                                            function (event) {
+                                                var keycode = (event.keyCode ? event.keyCode
+                                                        : event.which);
+                                                if (keycode == '13') {
+
+                                                    sendMessage();
+                                                    document
+                                                            .getElementById("usermsg").value = "";
+                                                    event.preventDefault();
+                                                }
+                                            });
+
+                            var ul = document.getElementById('chatMembers');
+
+                            function getEventTarget(e) {
+                                e = e || window.event;
+                                return e.target || e.srcElement;
+                            }
+
+                            ul.onclick = function (event) {
+                                var target = getEventTarget(event);
+                                var name = target.innerHTML;
+                                //var count = $("#tabs >ul >li").size();
+                                //var tabCount = count+1;
+                                addNewChat(name);
+
+                            };
+
+
+                            $('#reload').show();
+                            $('#reload_gif').hide();
+
+                        });
+
+
+
+        function tabClick(ids) {
+
+            ids = ids.toLowerCase();
+            var t = $("#" + ids).attr('href');
+            $('#ultab li a').addClass('inactive');
+            $("#" + ids).removeClass('inactive');
+            $('.divMessageBox').hide();
+            $(t).fadeIn('slow');
+            var curr_tab = "#" + ids.substring(6, ids.length).toLowerCase();
+            refreshUserListArray(channel_user_list[curr_tab]);
+        }
+
+        function chat() {
+            var active = $("#tabs").tabs("option", "active") + 1;
+
+            var id = "#" + $("#tabs .ui-tabs-panel:visible").attr("id");
+
+            if ($("#usermsg").val() != "") {
+
+                if ($(id).html() == "") {
+                    $(id).html("");
+                }
+                $(id)
+                        .append(
+                                "<div class='message_div'><div class='nick'>You</div><div class='messageInList'>"
+                                + $("#usermsg").val() + "</div></div>");
+                $(id + " .message_div").css({
+                    'border-bottom': "1px solid #CCCCCC"
+                });
+
+                $(id).animate({
+                    scrollTop: $(id).prop("scrollHeight") - $(id).height()
+                }, 1);
+                document.getElementById("usermsg").value = "";
+            } else {
+                alert("Please enter something into the text box to chat!");
+                return false;
+            }
+        }
+
+
+        //]]>
+    </script>
+
+</head>
+<body class="body">
+<div class="modal"><h1 style="color: white;text-align: center;">Loading...</h1></div>
+<h1>Web based IRC chat</h1>
+
+
+<form name="publish" method="post" target="_self"
+      onsubmit="return false;">
+
+    <input type="hidden" id="chatname"/>
+
+    <div style="height: 100%; width: 100%; position: relative;">
+
+        <div class="outer">
+
+            <div style="float: 'left'; width: 50%;">
+                <p>
+                    Select or change your Channel :<select name="channelSelect"
+                                                           id="channelSelect" onchange="channelChange()">
+                    <option value="0">--Select a Channel--</option>
+                </select> <img id="reload" name="reload" src="../images/icon-Green.png" onclick="refreshChannels()"  style="display: none" title="Click to refresh channel list"/>
+                    <img id="reload_gif" name="reload" src="../images/reload.gif" width="24" height="24" style="display: none"/>
+                </p>
+            </div>
+            <div style='top: 0; right: 0;text-align:right;position:absolute;text-align:right;'><a title="Exit the chat room!" style='text-decoration: underline; color: #cc0000; cursor: pointer;font-size: 14pt' onclick='closeWindow();' name="exit">Exit</a></div>
+            <div style="float:'right'; text-align: right; margin-right: 20px;">
+                <b>Chat Members: </b>
+                <p>Number of Members: <span id="member_count"></span></p>
+            </div>
+        </div>
+        <div style="width: 83%; float: left">
+            <div id="tabs">
+                <ul id="ultab">
+
+                </ul>
+
+                <div id="message_display_div"></div>
+
+            </div>
+
+            <div id="inputDiv">
+                    <textarea id="usermsg" name="message"
+                              placeholder="[Enter message]"></textarea>
+                <!--<input type="button" value="Send" onclick="sendMessage();"/>-->
+            </div>
+        </div>
+
+        <div class="gradientBoxesInner"
+             style="width: 11%; margin: 0 1%; float: right">
+
+            <div class="memberlists" style="width:100%">
+                <div class="active">
+                    <div class="meta"></div>
+                    <ul style="width: 82%;" id="chatMembers"
+                        title="Click to chat">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<div id="W3CHTML">
+    <button type="button"
+            onclick="window.location.href = 'http://validator.w3.org/check?uri=' + window.location.href">
+        <img src="http://www.w3.org/Icons/valid-xhtml11.png"
+             alt="launch icon"/>
+    </button>
+</div>
+
+
+</body>
+</html>

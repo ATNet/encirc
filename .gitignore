@@ -1,0 +1,15 @@
+.idea/*.*
+.settings/*
+.project
+.siblime-project
+.tern-project
+server/server.js.orig
+public/html/*.orig
+public/js/*.orig
+.idea/workspace.xml
+public/js/*.*~
+public/html/*.*~
+.gitignore~
+.DS_Store
+.idea
+node_modules
