@@ -6,7 +6,7 @@
     <link rel="stylesheet" type="text/css"
           href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"/>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.js"></script>
-    <script type="text/javascript" src="../js/browser.js"></script>
+    
     <script type="text/javascript"
             src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/style.css"/>
@@ -42,6 +42,8 @@
                                         success: function (data) {
 
                                             $("#chatname").val(data.chatname);
+                                            //alert("ajax chat+ "+$("#chatname").val());	
+
 
                                             var channel = data.channel.trim();
                                             var channelArray = [];
@@ -82,7 +84,9 @@
                                             var namecheck = channelName.trim()
                                                     .substring(1);
 
-                                            addNewChat(channelName.trim());
+						createSocket(channelName.trim());	
+
+                                            //addNewChat(channelName.trim());
 
                                             $('#ultab li a:not(:first)').addClass(
                                                     'inactive');
@@ -103,8 +107,9 @@
                                                                         .size();
                                                                 if (tabCount == 1) {
                                                                     closeWindow();
-
                                                                 } else {
+//alert("closing?");
+socket.close();
                                                                     var panelId = $(
                                                                             this)
                                                                             .closest(
@@ -166,16 +171,17 @@
 
 
 
-        function tabClick(ids) {
-
+        function tabClick(ids,ischannel) {
             ids = ids.toLowerCase();
             var t = $("#" + ids).attr('href');
             $('#ultab li a').addClass('inactive');
             $("#" + ids).removeClass('inactive');
             $('.divMessageBox').hide();
             $(t).fadeIn('slow');
-            var curr_tab = "#" + ids.substring(6, ids.length).toLowerCase();
-            refreshUserListArray(channel_user_list[curr_tab]);
+            if (ischannel == true) {
+            	var curr_tab = "#" + ids.substring(6, ids.length).toLowerCase();
+            	refreshUserListArray(channel_user_list[curr_tab]);
+	    }
         }
 
         function chat() {
@@ -209,7 +215,7 @@
 
         //]]>
     </script>
-
+<script type="text/javascript" src="../js/browser.js"></script>
 </head>
 <body class="body">
 <div class="modal"><h1 style="color: white;text-align: center;">Loading...</h1></div>

@@ -1,9 +1,9 @@
 var channel_user_list = {};
 var warned = false;
 var clientChannels = [];
-
+var socket;
 if (!window.WebSocket) {
-    document.body.innerHTML = 'This web browser do not support web sockets';
+    document.body.innerHTML = 'This web browser does not support web sockets';
 }
 
 window.onbeforeunload = function (e) {
@@ -11,69 +11,16 @@ window.onbeforeunload = function (e) {
     socket.send(jsonstring);
 };
 
-
 // create connection
 var host = location.origin.replace(/^http/, 'ws');
-var socket = new WebSocket(host);
-//var socket = new WebSocket("ws://serene-castle-67176.herokuapp.com:8081");
+//var socket = new WebSocket(host,"tomishere");
 
-function currentTab() {
-    var selectedTab = $("#tabs").tabs('option','active');
-    selectedTabName = $($("#tabs li")[selectedTab]).text();
-    selectedTabName = selectedTabName.substring(0,selectedTabName.length-1);
+function createSocket(channelName) {
+//alert("bro chat+ "+$("#chatname").val());
 
-    return selectedTabName;
-}
-
-// send message from form publish
-function sendMessage() {
-    var outgoingMessage = document.getElementById("usermsg").value;
-    var  substring = [];
-    substring[0] = "<script";
-    substring[1] = "<style";
-    var tabName = currentTab();
-
-    if (!(outgoingMessage.indexOf(substring[0]) > -1) && !(outgoingMessage.indexOf(substring[1]) > -1)) {
-        if (tabName in sessionStorage) {
-            outgoingMessage = Crypto.AES.encrypt(outgoingMessage, sessionStorage[tabName]);
-        }
-        if ((tabName.charAt(0) == "#") || (tabName.charAt(0) == "&")) {
-            jsonstring = '{"cm":{"userFrom":"' + $("#chatname").val() + '","to":"' + tabName + '","message":"' + outgoingMessage + '"}}';
-        } else {
-            jsonstring = '{"pm":{"userFrom":"' + $("#chatname").val() + '","to":"' + tabName + '","message":"' + outgoingMessage + '"}}';
-        }
-        socket.send(jsonstring);
-    }
-    else{
-
-        var mes = "", jsonstring = "";
-        if (warned == false) {
-            mes = "<b style='color:palevioletred'>Last warning for user:</b>" + $("#chatname").val() + "--><I>Please do not use scripts in the message box</I>";
-            if (tabName in sessionStorage) {
-                mes = Crypto.AES.encrypt(mes, sessionStorage[tabName]);
-            }
-
-            if (tabName.charAt(0) == '#') {
-                jsonstring = '{"cm":{"userFrom":"Admin","message":"' + mes + '","to":"' + tabName + '"}}';
-            }
-            else {
-                jsonstring = '{"pm":{"userFrom":"Admin","message":"' + mes + '","to":"' + tabName + '"}}';
-            }
-            showMessage(jsonstring);
-            warned = true;
-        }
-        else {
-            jsonstring = '{"kick":{"user":"' + $("#chatname").val() + '"}}';
-            socket.send(jsonstring);
-        }
-    }
-    return false;
-}
-
+socket = new WebSocket(host,$("#chatname").val());
 // incomming messages handler
 socket.onmessage = function (event) {
-
-
     var incomingMessage = event.data;
     var obj = JSON.parse(incomingMessage);
 
@@ -115,6 +62,80 @@ socket.onmessage = function (event) {
     }
 };
 
+socket.onopen = function () {
+	//var channelName = $("#channelSelect option:selected").text();
+	//alert("channelName " + channelName);
+	if (channelName != "") {
+		addNewChat(channelName.trim());
+	}
+}
+
+socket.onclose = function() {
+    //alert("here we are");
+    setTimeout(function(){createSocket("")}, 300);
+}
+
+
+}
+function currentTab() {
+    var selectedTab = $("#tabs").tabs('option','active');
+    if (selectedTab == false) {
+        selectedTab = 0;
+    }
+    selectedTabName = $($("#tabs li")[selectedTab]).text();
+    selectedTabName = selectedTabName.substring(0,selectedTabName.length-1);
+    
+   // alert("current tab: "+selectedTab);
+    return selectedTabName;
+}
+
+// send message from form publish
+function sendMessage() {
+    var outgoingMessage = document.getElementById("usermsg").value;
+    outgoingMessage = JSON.stringify(outgoingMessage);
+    var  substring = [];
+    substring[0] = "<script";
+    substring[1] = "<style";
+    var tabName = currentTab();
+
+    if (!(outgoingMessage.indexOf(substring[0]) > -1) && !(outgoingMessage.indexOf(substring[1]) > -1)) {
+        if (tabName in sessionStorage) {
+            outgoingMessage = '"'+Crypto.AES.encrypt(outgoingMessage, sessionStorage[tabName])+'"';
+        }
+        if ((tabName.charAt(0) == "#") || (tabName.charAt(0) == "&")) {
+            jsonstring = '{"cm":{"userFrom":"' + $("#chatname").val() + '","to":"' + tabName + '","message":' + outgoingMessage + '}}';
+        } else {
+            jsonstring = '{"pm":{"userFrom":"' + $("#chatname").val() + '","to":"' + tabName + '","message":' + outgoingMessage + '}}';
+        }
+        socket.send(jsonstring);
+    }
+    else{
+
+        var mes = "", jsonstring = "";
+        if (warned == false) {
+            mes = "<b style='color:palevioletred'>Last warning for user:</b>" + $("#chatname").val() + "--><I>Please do not use scripts in the message box</I>";
+            if (tabName in sessionStorage) {
+                mes = Crypto.AES.encrypt(mes, sessionStorage[tabName]);
+            }
+
+            if (tabName.charAt(0) == '#') {
+                jsonstring = '{"cm":{"userFrom":"Admin","message":"' + mes + '","to":"' + tabName + '"}}';
+            }
+            else {
+                jsonstring = '{"pm":{"userFrom":"Admin","message":"' + mes + '","to":"' + tabName + '"}}';
+            }
+            showMessage(jsonstring);
+            warned = true;
+        }
+        else {
+            jsonstring = '{"kick":{"user":"' + $("#chatname").val() + '"}}';
+            socket.send(jsonstring);
+        }
+    }
+    return false;
+}
+
+
 function showMessage(message) {
 
     var obj = JSON.parse(message);
@@ -127,7 +148,9 @@ function showMessage(message) {
         tabname = obj.cm.to;
         messageText = obj.cm.message;
         if (tabname in sessionStorage) {
+
             messageText = Crypto.AES.decrypt(messageText, sessionStorage[tabname]).toString();//Crypto.enc.Utf8
+	    messageText = messageText.substr(1,messageText.length-2);
         }
         userFrom = obj.cm.userFrom;
         tabname = tabname.substring(1).toLowerCase();
@@ -143,7 +166,7 @@ function showMessage(message) {
 
     var id = "#tabs-"+tabname;
 
-    addNewChat(tabname);
+  addNewChat(tabname);
 
     if (messageText != "") {
 
@@ -260,10 +283,12 @@ function showChannelList(channel_list){
 function addNewChat(name) {
     var id = 'tabs-' + name;
     var namecheck, namelength;
+    var ischannel=true;
     if (name.charAt(0) == '#' || name.charAt(0) == '&') {
-
+	ischannel = true;
         namecheck = name.substring(1).toLowerCase();
     } else {
+	ischannel = false;
         namecheck = name;
     }
     namelength = getTextWidth(name, "bold 13pt arial");
@@ -274,7 +299,7 @@ function addNewChat(name) {
             .append(
                 "<li id='li-id-" + namecheck + "'><a id='ui-id-"
                 + namecheck
-                + "' onclick='tabClick(this.id);' href='#tabs-"
+                + "' onclick='tabClick(this.id,"+ischannel+");' href='#tabs-"
                 + namecheck
                 + "'>"
                 + name
@@ -291,6 +316,7 @@ function addNewChat(name) {
 
             var jsonstring = '{"nc":{"channelName":"' + name + '","userFrom":"' + $("#chatname").val() + '"}}';
             channel_user_list[name] = [];
+//alert("new chat is created! " + socket);
             socket.send(jsonstring);
         } else {
             $("#message_display_div").append(
@@ -303,6 +329,7 @@ function addNewChat(name) {
 
     }
     var index = $("#ui-id-" + namecheck.toLowerCase()).parent().index();
+//alert("index " + index + " namecheck "+namecheck);
     $('#tabs').tabs("option", "active", index);
 }
 
@@ -373,3 +400,4 @@ function loadWindow() {
     $('.modal').fadeOut(1000);
 
 }
+

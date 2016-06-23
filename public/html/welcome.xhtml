@@ -121,7 +121,7 @@
 				<tr>
 					<td>Nick Name:
 					</td>
-					<td><input maxlength="30" name="yourchatname"
+					<td><input maxlength="30" name="yourchatname" id="yourchatname"
 							   style="width: 210px" title="atleast 3 characters, maximum 9 characters" type="text"
 							   required="required" pattern="[A-Za-z(?=.*\d)\-\ ]{3,9}"/></td>
 				</tr>
@@ -151,33 +151,34 @@
 		</div>
 
 	</div>
+<!--
 	<a href="#openModal">
 		<div>
 			<img id="lightbulb" src="./images/lightbulb_icon.png" alt="lightbulb"/>
 		</div>
 	</a>
-	<div id="openModal" class="modalDialog">
 		<div>
 			<a href="#close" title="Close" class="close">X</a>
 			<h2><u>Setting up</u></h2>
 			<h3 id="step_one">Step One</h3>
-			<p id="step_one_p">Select a server from the drop down menu here --> <img id="server_select" src="./images/server_select_image.png" alt="irc_server"/>
+			<p id="step_one_p">Select a server from the drop down menu here <img id="server_select" src="./images/server_select_image.png" alt="irc_server"/>
 			</p>
 
 			<h3 id="step_two">Step Two</h3>
-			<p id="step_two_p">Enter a nick name for yourself here --> <img id="nick_select" src="./images/nick_select.png" alt="nickname"/></p>
+			<p id="step_two_p">Enter a nick name for yourself here <img id="nick_select" src="./images/nick_select.png" alt="nickname"/></p>
 
 			<h3 id="step_three">Step Three</h3>
 			<p id="step_three_p">Enter a channel name here (if channel does not exist , it will be automatically
-				created) --><img id="channel_select" src="./images/channel_select.png" alt="channel_select"/></p>
+				created) <img id="channel_select" src="./images/channel_select.png" alt="channel_select"/></p>
 
 			<h3 id="step_four">Step Four (Optional)</h3>
-			<p id="step_four_p">Click on the key icon and type a password on the text field that appears --><img
+			<p id="step_four_p">Click on the key icon and type a password on the text field that appears <img
 					id="password_select" src="./images/password_select.png" alt="password_select"/></p>
 
 
 		</div>
 	</div>
+-->
 </form>
 <div id="W3CHTML">
 	<button type="button"
@@ -194,8 +195,8 @@
 	</button>
 </div>
 
-<div style="margin-right: 30px; overflow: hidden">
-	<div id="marquee">
+<div >
+	<div id="marquee" align = "center">
 		<span style="color: yellow;">Written by group of MSc students:</span><br />
 		<a href="mailto:ak48@hw.ac.uk"> Artem Karpov ak48@hw.ac.uk</a> <br /><a
 			href="mailto:nl148@hw.ac.uk"> Nelio Lukas nl148@hw.ac.uk</a><br /> <a

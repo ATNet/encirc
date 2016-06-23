@@ -337,8 +337,9 @@ h1
 	font-weight: bold;
 	padding-left: 1em;
 
+
 }
-#marquee { animation: going 12s linear infinite;}
+/*#marquee { animation: going 12s linear infinite;}
 
 #marquee:hover {
 	animation-play-state: paused;
@@ -352,7 +353,7 @@ h1
 		margin-left: -40em;
 	}
 }
-
+*/
 .morph {
 	-webkit-transition: all 1s linear 1s;
 	-moz-transition: all 1s linear 1s;

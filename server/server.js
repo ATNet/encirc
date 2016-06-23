@@ -23,7 +23,8 @@ var dataParser = bodyParser.urlencoded({
 var method = "POST";
 var store = [];
 var listofchannels = [];
-var chatname = '', channelname, servername = "";
+//var chatname = ''
+var channelname, servername = "";
 var irc = require('../');
 var bots = [];
 var clients = {};
@@ -44,6 +45,8 @@ app.get("/", function (req, res) {
 
 app.get("/ak48tf7nl148logininfonetworkapplications", function (req, res) {
 
+    //console.log("store[chatname].chatname = "+store[chatname].chatname);
+    //console.log("store[chatname].channelname = "+store[chatname].channel);
     res.send(store[chatname]); // send web page
 });
 
@@ -63,10 +66,21 @@ app.get("/test", function (req, res) {
     res.sendFile(path.join(__dirname, '../public/test/test.html'));
 })
 
-webSocketServer.on('connection', function (ws) {
+function showAllProps(obj) {
+  for (var i in obj) {
+    if (obj.hasOwnProperty(i)) {
+       console.log(i + " = " + obj[i] + "\n");
+    }
+  }
+	
+}
 
-    var id = Math.random();
-    //console.log(chatname + "-----------------------------chatname");
+webSocketServer.on('connection', function (ws) {
+	
+    //showAllProps(ws);
+    chatname = ws.protocol;
+    
+    //console.log("WS on connection, chatname: "+chatname);
     clients[chatname] = ws;
     websoc = ws;
 
@@ -87,8 +101,9 @@ webSocketServer.on('connection', function (ws) {
         }
         else if (obj.hasOwnProperty('rf')) {
 
-            //console.log("obj.rf.userFrom==" + obj.rf.userFrom.trim());
+            console.log("REFRESH obj.rf.userFrom==" + obj.rf.userFrom.trim());
             chatname = obj.rf.userFrom.trim();
+	    bots[chatname].disconnect("IRC bot disconnected", function() {delete bots[chatname];});
         }
         else if (obj.hasOwnProperty('kick')) {
 
@@ -99,13 +114,20 @@ webSocketServer.on('connection', function (ws) {
         }
         else if (obj.hasOwnProperty('close')) {
 
-            //console.log("obj.close.user==" + obj.close.user.trim());
+            console.log("obj.close.user==" + obj.close.user.trim());
 
             var temp_name = obj.close.user.trim();
 
             var jsonstring = '{"error":{"userFrom":"' + temp_name + '","reason":"user closed","code":"closed"}}';
             chatname = temp_name;
             clients[temp_name].send(jsonstring);
+
+	    try {
+                bots[chatname].disconnect("IRC bot disconnected", function() {delete bots[chatname];});
+	    }
+            catch(e) {
+                console.log('exception when exiting' + chatname);
+            }
         }
         else if (obj.hasOwnProperty('cl')) {
 
@@ -130,11 +152,13 @@ webSocketServer.on('connection', function (ws) {
 
     });
 
-    ws.on('close', function (ws) {
-        console.log('connection closed ' + chatname + "--->ws=" + ws + "--->clients[chatname]=" + clients[chatname]);
+    ws.on('close', function () {
+        chatname = ws.protocol;
         delete clients[chatname];
-        bots[chatname].disconnect();
-        delete bots[chatname];
+        console.log('web socket connection closed ' + chatname);
+        //bots[chatname].disconnect("IRC bot disconnected");
+        //delete bots[chatname];
+	//console.log('IRC bot disconnected ' + chatname);
         delete store[chatname];
 
     });
@@ -142,18 +166,13 @@ webSocketServer.on('connection', function (ws) {
 });
 
 function handler(req, res) {
-
-    // var myMap = { 'chatname': req.body.yourchatname};
-    chatname = req.body.yourchatname;
-
+    chatname = req.body.yourchatname.toLowerCase();
     channelname = req.body.yourchannelname.toLowerCase();
 
     if (channelname.indexOf('.') > -1) {
         res.sendFile(path.join(__dirname, '../public/html/welcome.xhtml'));
         return;
     }
-
-    servername = req.body.servercombo;
 
     hashpass = req.body.pass_hash;
 
@@ -173,6 +192,8 @@ function handler(req, res) {
         clientChannels.push(channelname);
     }
 
+ 	chatname = req.body.yourchatname;
+	servername = req.body.servercombo;
 
     if (!store.hasOwnProperty(chatname)) {
         store[chatname] = new Object();
@@ -192,7 +213,7 @@ function handler(req, res) {
         });
 
         bots[chatname] = bot;
-        console.log("new client created:" + chatname);
+        console.log("new IRC client created:" + chatname);
 
         bots[chatname].addListener('message#', function (from, to, message) {
             //console.log('%s => %s: %s', from, to, message);
@@ -223,8 +244,12 @@ function handler(req, res) {
             }
         });
 
+        bots[chatname].addListener('raw', function (message) {
+            //console.log('raw %s %s',  message.command, message.rawCommand);
+        });
+
         bots[chatname].addListener('error', function (message) {
-            //console.error('ERRORsssssss: %s: %s', message.command, message.args.join(' '));
+            console.error('ERRORsssssss: %s: %s', message.command, message.args.join(' '));
 
             if (message.command == 'err_notregistered') {
                 //console.log("go back" + message.nick + "---message.user=" + message.user + "---command=" + message.command);
